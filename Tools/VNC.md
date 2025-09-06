@@ -59,9 +59,11 @@ hashcat -m 5900 hash.txt wordlist.txt
 - **Man-in-the-middle / Sniffing**: VNC is often **unencrypted** (unless via TLS). Use Wireshark or `Bettercap` to capture passwords.
 - **VNC over SSH tunnel** (for pivoting / bypassing firewall):
 
+If you need to tunnel over SSH, do this first:
+
 ```bash
-ssh -L 5900:localhost:5900 user@target
-vncviewer localhost:5900
+ssh -L 5901:localhost:5901 user@remote-ip gvncviewer localhost:5901`
+else just `gvncviewer 10.201.97.53:0
 ```
 
 ---
