@@ -94,7 +94,7 @@ CVE is a publicly available catalog of security issues sponsored by the DHS. Eac
 - **Stage 8: Announcing the CVE:** Researchers sharing multiple CVEs should ensure each indicates different vulnerabilities.
 - **Stage 9: Providing Information to The CVE Team:** Provide additional details for the official CVE listing and the NVD.
 
-**2.2.3 Responsible Disclosure:** A critical practice where a researcher works with a vendor to ensure a patch is available _before_ publicly announcing a vulnerability. This prevents "real threat actors [from leveraging] the issues for criminal use, also referred to as a zero day or an 0-day."
+**2.2.3 Responsible Disclosure:** A critical practice where a researcher works with a vendor to ensure a patch is available _before_ publicly announcing a vulnerability. This prevents "real threat actors (from leveraging) the issues for criminal use, also referred to as a zero day or an 0-day."
 
 **2.2.4 Examples of CVEs:**
 
