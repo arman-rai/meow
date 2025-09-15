@@ -165,3 +165,81 @@ and did this
 `nathan@cap:/tmp$ /usr/bin/python3.8 -c 'import os; os.setuid(0); os.system("/bin/bash")'`
 
 we got root~
+
+## I. Overview of the Challenge
+
+The challenge involves exploiting a web application to retrieve packet captures, analyzing them to find credentials, and then escalating privileges on the system using a specific capability.
+
+## II. Initial Reconnaissance and Enumeration
+
+### A. Nmap Scan
+
+1. **Purpose:** To identify open ports and services running on the target machine.
+2. **Command:** nmap -sc -sv -oA nmap/cap 10.10.10.245 (or similar)
+
+- **Key Findings:**Port 21: FTP (vsftpd 3.0.3)
+- Port 22: SSH (OpenSSH)
+- Port 80: HTTP (Gunicorn, likely a Python Flask/Django application)
+
+### B. FTP Enumeration (Port 21)
+
+1. **Banner Grabbing:** Initial connection to identify the FTP server and version (vsftpd 3.0.3).
+2. **Vulnerability Search:** Using searchsploit vsftpd revealed no direct exploits for version 3.0.3.
+3. **Anonymous Login:** Attempted ftp anonymous login, which failed. Nmap also typically checks for this.
+4. **Conclusion:** No immediate vulnerabilities or entry points found via FTP. Brute-forcing was deemed inefficient without known usernames.
+
+### C. HTTP Enumeration (Port 80)
+
+1. **Web Server Identification:** Gunicorn strongly suggests a Python web application (Flask or Django). The absence of a /admin path pointed towards Flask.
+2. **Initial Page Interaction:** The main page presented "Security Snapshot" and other links. Interacting with the "Capture" link redirected to /data/2, which downloaded a packet capture file (.pcap).
+3. **Observation of Network Output:** Pages like /data/ip and /data/netstat displayed output similar to ifconfig and netstat commands, but were static and did not appear to allow command injection.
+
+## III. Gaining User Access (Foothold)
+
+### A. Packet Capture Vulnerability (IDOR)
+
+1. **Discovery:** The web application allowed downloading packet captures sequentially (e.g., /data/1, /data/2). By decrementing the ID (e.g., trying /data/0), it was possible to download other users' session captures. This is an Indirect Object Reference (IDOR) vulnerability.
+2. **Impact:** Downloading 0.pcap (presumably from an administrator or another user).
+
+### B. Analyzing the Packet Capture
+
+1. **Tool:** Wireshark was used to analyze 0.pcap. Alternatively, Zeek (formerly Bro) with appropriate configuration could be used to extract logs.
+2. **Key Discovery:** Following TCP streams within the capture revealed FTP credentials: nathan:bucketstartswithhathatorm3.
+
+### C. Logging into FTP
+
+1. **Credentials:** nathan:bucketstartswithhathatorm3
+2. **Actions:** Logged in successfully to FTP. Found user.txt. Attempted to create an SSH directory (.ssh) but was denied permission. Checked for bash_history, bashrc, .viminfo, etc., but could not modify them.
+
+### D. Logging into SSH
+
+1. **Credentials:** Reused the FTP credentials (nathan:bucketstartswithhathatorm3) for SSH access.
+2. **Success:** Successfully logged in as nathan.
+
+## IV. Privilege Escalation (Root)
+
+### A. Initial Post-Exploitation Enumeration
+
+1. **Web Server Files:** Examined app.py in /var/www/html/. Confirmed Flask was used. Looked for hardcoded credentials or command injection points, but found none. The /data/id endpoint was confirmed to only accept integers, preventing path traversal or other injection.
+2. **LinPEAS:** Transferred and executed linpeas.sh to automate privilege escalation checks.
+
+### B. LinPEAS Key Findings
+
+1. **Capabilities:** linpeas.sh highlighted that python3.8 had the setuid capability.
+2. **Verification:** Checked ls -la /usr/bin/python3.8 and confirmed it was owned by root.
+
+### C. Exploiting setuid Capability
+
+1. **Mechanism:** The setuid capability allows a program to run with the effective user ID of the file owner (in this case, root), regardless of the user who executes it.
+
+- **Exploitation Steps:**Execute python3.
+- Import the os module: import os.
+- Set the effective user ID to 0 (root): os.setuid(0).
+- Execute a shell: os.system("sh").
+
+1. **Result:** Gained a root shell.
+
+### D. Accessing Root Flag
+
+1. **Location:** cd /root
+2. **Flag:** root.txt
