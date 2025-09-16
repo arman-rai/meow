@@ -5,4 +5,4 @@
 - [ ] b3dr0ck
 - [ ] Flatline
 - [ ] Break out of the cage
-- [ ] Wgel CTF
+- [x] Wgel CTF
