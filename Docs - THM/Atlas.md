@@ -80,3 +80,8 @@ After successfully logging in via RDP (corresponding to your "Then logged in use
 - **PrintNightmare** successfully created a new administrative user named `adm1n` with the password `P@ssw0rd`.
 - This new administrator account was then used to launch a high-integrity command prompt.
 - Finally, with administrative privileges, the tool **Mimikatz** was used to dump password hashes from the machine, including the **NTLM password hash** for the built-in Administrator account.
+
+
+https://github.com/calebstewart/CVE-2021-1675#
+https://github.com/peass-ng/PEASS-ng/tree/master/winPEAS
+https://github.com/gentilkiwi/mimikatz/tree/master/mimikatz
